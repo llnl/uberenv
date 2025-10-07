@@ -1170,6 +1170,8 @@ class SpackEnv(UberEnv):
                     os.unlink(hc_fname)
                 print("[copying host config file to {0}]".format(pjoin(self.dest_dir,hc_fname)))
                 sexe("cp {0} {1}".format(hc_path,hc_fname))
+                print("[copying host config file to {0}]".format(self.spack_env_directory))
+                sexe("cp {0} {1}".format(hc_path,self.spack_env_directory))
                 print("[removing project build directory {0}]".format(pjoin(build_dir)))
                 sexe("rm -rf {0}".format(build_dir))
         else:
