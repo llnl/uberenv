@@ -862,13 +862,6 @@ class SpackEnv(UberEnv):
         if not os.path.exists(pjoin(self.dest_spack, "var", "spack", "repos", "builtin")):
             packages_repo = pjoin(self.dest_dir, "builtin_spack_packages_repo")
 
-            print(f"[info: moving spack builtin package repository to {packages_repo}]")
-            spack_repo_set_cmd = f"{self.spack_exe(use_spack_env=False)} repo set --destination {packages_repo} builtin"
-            res = sexe(spack_repo_set_cmd, echo=True)
-            if res != 0:
-                print("[ERROR: Failed to set builtin package repository destination]")
-                sys.exit(-1)
-
             # Optionally, check out Spack's builtin package repo to a specific commit/branch/tag
             if "spack_packages_url" in self.project_args:
                 spack_repo_remove_cmd = f"{self.spack_exe(use_spack_env=False)} repo remove builtin"
@@ -884,6 +877,13 @@ class SpackEnv(UberEnv):
                 if res != 0:
                     print("[ERROR: Failed to add builtin package repository with given URL]")
                     sys.exit(-1)
+
+            print(f"[info: moving spack builtin package repository to {packages_repo}]")
+            spack_repo_set_cmd = f"{self.spack_exe(use_spack_env=False)} repo set --destination {packages_repo} builtin"
+            res = sexe(spack_repo_set_cmd, echo=True)
+            if res != 0:
+                print("[ERROR: Failed to set builtin package repository destination]")
+                sys.exit(-1)
 
             # Optionally, check out Spack's builtin package repo to a specific commit/branch/tag
             if "spack_packages_commit" in self.project_args:
