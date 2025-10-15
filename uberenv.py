@@ -859,7 +859,6 @@ class SpackEnv(UberEnv):
                 sys.exit(-1)
 
 
-
     def disable_spack_config_scopes(self):
         # disables all config scopes except "defaults", which we will
         # force our settings into
@@ -921,13 +920,6 @@ class SpackEnv(UberEnv):
 
             # Optionally, check out Spack's builtin package repo to a specific commit/branch/tag
             if "spack_packages_url" in self.project_args:
-                spack_repo_remove_cmd = f"{self.spack_exe()} repo remove builtin"
-                res = sexe(spack_repo_remove_cmd, echo=True)
-                if res != 0:
-                    print("[ERROR: Failed to remove builtin package repository so it could be re-added with given URL]")
-                    sys.exit(-1)
-
-                # Now add it back with the correct url
                 url = self.project_args["spack_packages_url"]
                 spack_repo_add_cmd = f"{self.spack_exe()} repo add --name builtin {url}"
                 res = sexe(spack_repo_add_cmd, echo=True)
