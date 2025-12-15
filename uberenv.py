@@ -1039,7 +1039,7 @@ class SpackEnv(UberEnv):
         # Check if spec is already installed and set spec_hash
         for line in out.split("\n"):
             # Example of matching line: ("status"  "hash"  "package"...)
-            # [+]  hf3cubkgl74ryc3qwen73kl4yfh2ijgd  serac@develop%clang@10.0.0-apple~debug~devtools~glvis arch=darwin-mojave-x86_64
+            # [+]  hf3cubkgl74ryc3qwen73kl4yfh2ijgd  smith@develop%clang@10.0.0-apple~debug~devtools~glvis arch=darwin-mojave-x86_64
             if re.match(r"^(\[\+\]| - )  [a-z0-9]{32}  " + re.escape(self.pkg_name), line):
                 self.spec_hash = line.split("  ")[1].lstrip()
                 # if spec already installed
