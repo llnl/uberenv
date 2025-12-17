@@ -690,7 +690,7 @@ class SpackEnv(UberEnv):
 
     # Returns version of Spack
     def spack_version(self):
-        _, out = sexe(f"{self.spack_exe()} -V", ret_output=True)
+        _, out = sexe('{0} --version'.format(self.spack_exe(use_spack_env=False)), ret_output=True)
         return out.split()[0]
 
     def check_concretizer_args(self):
