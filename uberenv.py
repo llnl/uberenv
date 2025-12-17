@@ -63,6 +63,7 @@ import glob
 import re
 import argparse
 
+from packaging.version import Version
 from functools import partial
 
 from os import environ as env
@@ -664,10 +665,11 @@ class SpackEnv(UberEnv):
 
         return exe
 
-    # Returns version of Spack being used
+    # Returns version of Spack being used as Version type
+    # https://packaging.pypa.io/en/latest/version.html#packaging.version.Version
     def spack_version(self):
-        res, out = sexe('{0} --version'.format(self.spack_exe(use_spack_env=False)), ret_output=True)
-        return out
+        _, out = sexe(f"{self.spack_exe()} -V", ret_output=True)
+        return Version(out.split()[0])
 
     def check_concretizer_args(self):
         cmd = "{0} help install".format(self.spack_exe(use_spack_env=False))
@@ -977,6 +979,14 @@ class SpackEnv(UberEnv):
             print("[ERROR: Failed to update git reference for builtin package repository]")
             sys.exit(-1)
 
+        # Prevent Spack from mixing toolchains
+        if self.spack_version() >= Version("1.1.0"):
+            print("[preventing Spack from mixing toolchains]\n")
+            res = sexe(f"{self.spack_exe()} config --scope=env:{self.spack_env_directory} add concretizer:compiler_mixing:False")
+            if res != 0:
+                print("[ERROR: Failed to disable mix toolchains in Spack]")
+                sys.exit(-1)
+
         # Find pre-installed compilers and packages and stop uberenv.py
         if self.spack_setup_environment:
             # Finding compilers
@@ -1063,7 +1073,7 @@ class SpackEnv(UberEnv):
 
     def show_info(self):
         # print version of spack
-        print("[spack version: {0}]".format(self.spack_version()))
+        print("[spack version: {0}]".format(str(self.spack_version())))
 
         # print concretized spec with install info
         # default case prints install status and 32 characters hash
