@@ -688,9 +688,9 @@ class SpackEnv(UberEnv):
 
         return exe
 
-    # Returns version of Spack
+    # Returns version of Spack being used
     def spack_version(self):
-        _, out = sexe('{0} --version'.format(self.spack_exe(use_spack_env=False)), ret_output=True)
+        res, out = sexe('{0} --version'.format(self.spack_exe(use_spack_env=False)), ret_output=True)
         return out.split()[0]
 
     def check_concretizer_args(self):
@@ -1098,7 +1098,7 @@ class SpackEnv(UberEnv):
 
     def show_info(self):
         # print version of spack
-        print("[spack version: {0}]".format(str(self.spack_version())))
+        print("[spack version: {0}]".format(self.spack_version()))
 
         # print concretized spec with install info
         # default case prints install status and 32 characters hash
