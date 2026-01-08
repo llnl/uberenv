@@ -87,7 +87,7 @@ See :ref:`project_configuration` for more details.
 Uberenv is developed by LLNL, originally in support of the `Ascent <https://github.com/alpine-dav/ascent/>`_,
 `Axom <https://github.com/llnl/axom>`_, and `Conduit <https://github.com/llnl/conduit>`_  projects. It is now also used
 by `Umpire <https://github.com/llnl/umpire>`_, `CHAI <https://github.com/llnl/CHAI>`_, `RAJA <https://github.com/llnl/RAJA>`_
-and `Serac <https://github.com/llnl/serac>`_, among others.
+and `Smith <https://github.com/llnl/smith>`_, among others.
 
 
 Command Line Options
@@ -224,7 +224,11 @@ Project settings are as follows:
   spack_activate           **None**                   Spack packages to activate                       **None**
   spack_build_mode         ``--spack-build-mode``     Set mode used to build TPLs with Spack           ``dev-build``
   spack_configs_path       **None**                   Directory with Spack configs to be autodetected  ``spack_configs``
+  spack_packages_url       **None**                   Download url for Spack packages                  ``https://github.com/spack/spack-packages.git``
   spack_packages_path      **None**                   Directory|List with Package Repos to be added    ``packages``
+  spack_packages_branch    **None**                   Spack packages repo branch to checkout           **None**
+  spack_packages_commit    **None**                   Spack packages repo commit to checkout           **None**
+  spack_packages_tag       **None**                   Spack packages repo tag to checkout.             **None**
   spack_setup_clingo       **None**                   Do not install clingo if set to ``false``        **None**
   spack_externals          ``--spack-externals``      Space delimited string of packages for Spack to  **None**
                                                       search for externals
@@ -237,6 +241,8 @@ Project settings are as follows:
  ========================= ========================== ================================================ =======================================
 
 If a ``spack_commit`` is present, it supercedes the ``spack_branch`` option, and similarly for ``vcpkg_commit``and ``vcpkg_branch``.
+The precedence for the Spack packages repo options are ``spack_packages_commit``, ``spack_packages_branch``, and last ``spack_packages_tag``.
+If none of these are given, Spack will pull the current commit on their default branch.
 
 When used as a submodule ``.uberenv_config.json`` should define both ``spack_configs_path`` and ``spack_packages_path``,
 providing Uberenv with the respective location of ``spack_configs`` and ``packages`` directories.

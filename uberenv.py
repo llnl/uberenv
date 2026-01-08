@@ -869,18 +869,8 @@ class SpackEnv(UberEnv):
             sexe("git stash", echo=True)
             res = sexe("git pull", echo=True)
             if res != 0:
-                #Usually untracked files that would be overwritten
+                # Usually untracked files that would be overwritten
                 print("[ERROR: Git failed to pull]")
-                sys.exit(-1)
-
-        # Move destination of Spack builtin package repository if not included in Spack repo (pre-1.0)
-        if not os.path.exists(pjoin(self.dest_spack, "var", "spack", "repos", "builtin")):
-            builtin_repo = pjoin(self.dest_dir, "builtin_spack_packages_repo")
-            print(f"[info: moving spack builtin package repository to {builtin_repo}]")
-            spack_repo_set_cmd = f"{self.spack_exe(use_spack_env=False)} repo set --destination {builtin_repo} builtin"
-            res = sexe(spack_repo_set_cmd, echo=True)
-            if res != 0:
-                print("[ERROR: Failed to set builtin package repository destination]")
                 sys.exit(-1)
 
 
@@ -965,6 +955,69 @@ class SpackEnv(UberEnv):
             print("[ERROR: Failed to create Spack Environment]")
             sys.exit(-1)
 
+        # Move and checkout Spack builtin package repository if not included in Spack repo
+        if not os.path.exists(pjoin(self.dest_spack, "var", "spack", "repos", "builtin")):
+            packages_repo = pjoin(self.dest_dir, "builtin_spack_packages_repo")
+
+            # Optionally, check out Spack's builtin package repo to a specific commit/branch/tag
+            if "spack_packages_url" in self.project_args:
+                url = self.project_args["spack_packages_url"]
+                spack_repo_add_cmd = f"{self.spack_exe()} repo add --name builtin {url}"
+                res = sexe(spack_repo_add_cmd, echo=True)
+                if res != 0:
+                    print("[ERROR: Failed to add builtin package repository with given URL]")
+                    sys.exit(-1)
+
+            print(f"[info: moving spack builtin package repository to {packages_repo}]")
+            spack_repo_set_cmd = f"{self.spack_exe()} repo set --destination {packages_repo} builtin"
+            res = sexe(spack_repo_set_cmd, echo=True)
+            if res != 0:
+                print("[ERROR: Failed to set builtin package repository destination]")
+                sys.exit(-1)
+
+            # Optionally, check out Spack's builtin package repo to a specific commit/branch/tag
+            if "spack_packages_commit" in self.project_args:
+                sha1 = self.project_args["spack_packages_commit"]
+
+                spack_repo_update_cmd = f"{self.spack_exe()} repo update --commit {sha1} builtin"
+                res = sexe(spack_repo_update_cmd, echo=True)
+                if res != 0:
+                    print("[ERROR: Failed to update git commit for builtin package repository]")
+                    sys.exit(-1)
+            elif "spack_packages_branch" in self.project_args:
+                branch = self.project_args["spack_packages_branch"]
+
+                spack_repo_update_cmd = f"{self.spack_exe()} repo update --branch {branch} builtin"
+                res = sexe(spack_repo_update_cmd, echo=True)
+                if res != 0:
+                    print("[ERROR: Failed to update git branch for builtin package repository]")
+                    sys.exit(-1)
+            elif "spack_packages_tag" in self.project_args:
+                tag = self.project_args["spack_packages_tag"]
+
+                spack_repo_update_cmd = f"{self.spack_exe()} repo update --tag {tag} builtin"
+                res = sexe(spack_repo_update_cmd, echo=True)
+                if res != 0:
+                    print("[ERROR: Failed to update git tag for builtin package repository]")
+                    sys.exit(-1)
+            else:
+                print("[info: User did not specify any `spack_packages_*` override, Spack will pull the default ref of spack-packages]")
+
+        spack_pkg_keys = ("spack_packages_commit", "spack_packages_branch", "spack_packages_tag")
+        if any(key in self.project_args for key in spack_pkg_keys):
+            # Check if environment specifies alternate builtin packages repository
+            print("[checking for alternate builtin repository in environment...]")
+            res, out = sexe(f"{self.spack_exe()} config --scope env:{self.spack_env_file} get repos", ret_output=True)
+            if res == 0 and "builtin" in out:
+                print("[WARNING: Environment specifies alternate builtin packages repository, it will take precedence over any setting in uberenv config file.]")
+                print(f"[Environment builtin repo config: {out.strip()}]")
+
+        spack_repo_update_cmd = f"{self.spack_exe()} repo update"
+        res = sexe(spack_repo_update_cmd, echo=True)
+        if res != 0:
+            print("[ERROR: Failed to update git reference for builtin package repository]")
+            sys.exit(-1)
+
         # Find pre-installed compilers and packages and stop uberenv.py
         if self.spack_setup_environment:
             # Finding compilers
@@ -1016,13 +1069,17 @@ class SpackEnv(UberEnv):
         print("[adding spack package: {0}]".format(self.pkg_name_with_spec()))
         spack_add_cmd = "{0} add {1}".format(self.spack_exe(),
             self.pkg_name_with_spec())
-        sexe(spack_add_cmd, echo=True)
+        res = sexe(spack_add_cmd, echo=True)
+        if res != 0:
+            print(f"[ERROR: Failed to add Spack spec '{0}']".format(self.pkg_name_with_spec()))
+            sys.exit(-1)
 
         # For dev-build, call develop
         if self.build_mode == "dev-build":
             print("[calling spack develop]")
-            spack_develop_cmd = "{0} develop --no-clone --path={1} {2}".format(
-                self.spack_exe(), self.pkg_src_dir, self.pkg_name_with_spec())
+            spack_develop_cmd = "{0} develop --no-clone --path={1} {2}@={3}".format(
+                self.spack_exe(), self.pkg_src_dir,  self.pkg_name_with_spec(), self.pkg_version)
+
             sexe(spack_develop_cmd, echo=True)
 
     def symlink_spack_env_view(self):
@@ -1084,7 +1141,7 @@ class SpackEnv(UberEnv):
         # Check if spec is already installed and set spec_hash
         for line in out.split("\n"):
             # Example of matching line: ("status"  "hash"  "package"...)
-            # [+]  hf3cubkgl74ryc3qwen73kl4yfh2ijgd  serac@develop%clang@10.0.0-apple~debug~devtools~glvis arch=darwin-mojave-x86_64
+            # [+]  hf3cubkgl74ryc3qwen73kl4yfh2ijgd  smith@develop%clang@10.0.0-apple~debug~devtools~glvis arch=darwin-mojave-x86_64
             if re.match(r"^(\[\+\]| - )  [a-z0-9]{32}  " + re.escape(self.pkg_name), line):
                 self.spec_hash = line.split("  ")[1].lstrip()
                 # if spec already installed
