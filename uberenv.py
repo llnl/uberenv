@@ -877,7 +877,6 @@ class SpackEnv(UberEnv):
     def disable_spack_config_scopes(self):
         # disables all config scopes except "defaults", which we will
         # force our settings into
-
         spack_lib_config_src = pjoin(self.dest_spack,"lib","spack","spack","config.py")
         print("[disabling config scope (except defaults) in: {0}]".format(spack_lib_config_src))
         cfg_script = open(spack_lib_config_src).read()
@@ -914,6 +913,23 @@ class SpackEnv(UberEnv):
             path_script = path_script.replace(spack_ucache_stmt,'return "{0}"'.format(spack_cache_path_dir))
         # write the updated source
         open(spack_lib_paths_src,"w").write(path_script)
+
+        # 1.1.0+ logic to limit config scopes
+        #####
+        # NOTE: As of 1.1.0 this is a way to disable settings from ~/.spack
+        # however, without hacks above  - other aspects of spack still use ~/.spack
+        # (one example is repo locks)
+        # spack team is working on an isolate command to solve this
+        #####
+        spack_settings_config_file = pjoin(self.dest_spack,"etc","spack","include.yaml")
+        uberenv_settings ="""
+include:
+  # UBERENV: ONLY USE site configuration scope
+  - name: "site"
+    path: "$spack/etc/spack/site"
+    optional: false
+"""
+        open(spack_settings_config_file,"w").write(uberenv_settings)
 
 
     def set_spack_bootstrap_dir(self):
@@ -1407,10 +1423,20 @@ class SpackEnv(UberEnv):
             print("[ERROR: 'spack bootstrap now' failed with returncode {0}]".format(res))
             sys.exit(-1)
 
-        res = sexe('{0} bootstrap status'.format(self.spack_exe(use_spack_env = False)), echo=True)
-        if res != 0:
-            print("[ERROR: 'spack bootstrap status' failed with returncode {0}]".format(res))
-            sys.exit(-1)
+        #####
+        # NOTE: Spack 1.1.0 has an issue with bootstrap now related to gpg2
+        #####
+        # `spack bootstrap status` fails post successful `spac bootstrap now`
+        #
+        # [PASS] Core Functionalities
+        # [FAIL] Binary packages
+        #  [B] MISSING "gpg2": required to sign/verify buildcaches
+        #. Spack will take care of bootstrapping any missing dependency marked as [B]. Dependencies marked as [-] are instead required to be found on the system.
+        #
+        # res = sexe('{0} bootstrap status'.format(self.spack_exe(use_spack_env = False)), echo=True)
+        # if res != 0:
+        #     print("[ERROR: 'spack bootstrap status' failed with returncode {0}]".format(res))
+        #     sys.exit(-1)
 
 
 def find_osx_sdks():
