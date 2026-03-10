@@ -87,7 +87,7 @@ See :ref:`project_configuration` for more details.
 Uberenv is developed by LLNL, originally in support of the `Ascent <https://github.com/alpine-dav/ascent/>`_,
 `Axom <https://github.com/llnl/axom>`_, and `Conduit <https://github.com/llnl/conduit>`_  projects. It is now also used
 by `Umpire <https://github.com/llnl/umpire>`_, `CHAI <https://github.com/llnl/CHAI>`_, `RAJA <https://github.com/llnl/RAJA>`_
-and `Serac <https://github.com/llnl/serac>`_, among others.
+and `Smith <https://github.com/llnl/smith>`_, among others.
 
 
 Command Line Options
