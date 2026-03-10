@@ -139,12 +139,14 @@ def parse_args():
     parser.add_argument("--no-spack-reuse",
                       dest="spack_reuse",
                       action="store_false",
+                      default=True,
                       help="Disable spack --reuse concretizer option. By default if the option exists, it will be set.")
 
     # disable optional spack --fresh concretizer behaviour
     parser.add_argument("--no-spack-fresh",
                       dest="spack_fresh",
                       action="store_false",
+                      default=True,
                       help="Disable spack --fresh concretizer option. By default if the option exists, it will be set.")
 
     # this option allows a user to set the directory for their vcpkg ports on Windows
@@ -298,8 +300,6 @@ def parse_args():
                       dest="spack_env_file",
                       default=None,
                       help="Path to Spack Environment file (e.g. spack.yaml or spack.lock)")
-
-    parser.set_defaults(spack_fresh=True, spack_reuse=True)
 
     ###############
     # parse args
