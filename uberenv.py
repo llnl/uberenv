@@ -693,7 +693,7 @@ class SpackEnv(UberEnv):
         # otherwise use fresh if it exists
         if self.args["spack_reuse"] and self.spack_reuse_exists:
             options += "--reuse "
-        elif self.args["spack_fresh"] and self.spack_fresh_exists:
+        if self.args["spack_fresh"] and self.spack_fresh_exists:
             options += "--fresh "
         return options
 
