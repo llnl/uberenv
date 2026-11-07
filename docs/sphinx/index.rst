@@ -241,9 +241,11 @@ Project settings are as follows:
   vcpkg_ports_path              ``--vcpkg-ports-path``              Folder with vcpkg ports files                    **None**
  ============================== =================================== ================================================ =======================================
 
-If a ``spack_commit`` is present, it supercedes the ``spack_branch`` option, and similarly for ``vcpkg_commit``and ``vcpkg_branch``.
-The precedence for the Spack packages repo options are ``spack_packages_commit``, ``spack_packages_branch``, and last ``spack_packages_tag``.
-If none of these are given, Spack will pull the current commit on their default branch.
+If a ``spack_commit`` is present, it supersedes the ``spack_branch`` option, and similarly for ``vcpkg_commit``and ``vcpkg_branch``.
+The precedence for the Spack builtin packages repo options are ``spack_packages_commit``, ``spack_packages_branch``, and last ``spack_packages_tag``.
+If none of these are given, Spack will pull the current commit on their default branch. If any Spack package repo within ``spack_packages_path`` contains
+the namespace ``builtin``, it's assumed to be the Spack builtin package repository, and will override all of the other Spack package repo options listed
+prior.
 
 When used as a submodule ``.uberenv_config.json`` should define both ``spack_configs_path`` and ``spack_packages_path``,
 providing Uberenv with the respective location of ``spack_configs`` and ``packages`` directories.
