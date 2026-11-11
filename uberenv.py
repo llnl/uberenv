@@ -1094,6 +1094,28 @@ class SpackEnv(UberEnv):
                 print("[ERROR: Failed to configure compiler mixing in Spack]")
                 sys.exit(-1)
 
+        # For each package path (if there is a repo.yaml), add Spack repository to environment
+        if len(self.packages_paths) > 0:
+            for _base_path in self.packages_paths:
+                spack_pkg_repo      = os.path.join(_base_path, "../")
+                spack_pkg_repo_yaml = os.path.join(_base_path, "../repo.yaml")
+                if os.path.isfile(os.path.join(spack_pkg_repo_yaml)):
+                    print("[adding spack repo {0}]".format(spack_pkg_repo))
+                    spack_repo_add_cmd = "{0} repo add {1}".format(self.spack_exe(), spack_pkg_repo)
+                    sexe(spack_repo_add_cmd, echo=True)
+                else:
+                    print("[ERROR: No Spack repo.yaml detected in {0}]".format(spack_pkg_repo))
+                    sys.exit(-1)
+
+        # Add spack package
+        print("[adding spack package]")
+        spack_add_cmd = "{0} add {1}".format(self.spack_exe(),
+            self.pkg_name_with_spec)
+        res = sexe(spack_add_cmd, echo=True)
+        if res != 0:
+            print(f"[ERROR: Failed to add Spack spec '{self.pkg_name_with_spec}']")
+            sys.exit(-1)
+
         # Find pre-installed compilers and packages and stop uberenv.py
         if self.spack_setup_environment:
             # Finding compilers
@@ -1127,28 +1149,6 @@ class SpackEnv(UberEnv):
             sexe("cp {0} {1}".format(generated_spack_yaml, copied_spack_yaml))
 
             print("[setup environment]")
-
-        # For each package path (if there is a repo.yaml), add Spack repository to environment
-        if len(self.packages_paths) > 0:
-            for _base_path in self.packages_paths:
-                spack_pkg_repo      = os.path.join(_base_path, "../")
-                spack_pkg_repo_yaml = os.path.join(_base_path, "../repo.yaml")
-                if os.path.isfile(os.path.join(spack_pkg_repo_yaml)):
-                    print("[adding spack repo {0}]".format(spack_pkg_repo))
-                    spack_repo_add_cmd = "{0} repo add {1}".format(self.spack_exe(), spack_pkg_repo)
-                    sexe(spack_repo_add_cmd, echo=True)
-                else:
-                    print("[ERROR: No Spack repo.yaml detected in {0}]".format(spack_pkg_repo))
-                    sys.exit(-1)
-
-        # Add spack package
-        print("[adding spack package]")
-        spack_add_cmd = "{0} add {1}".format(self.spack_exe(),
-            self.pkg_name_with_spec)
-        res = sexe(spack_add_cmd, echo=True)
-        if res != 0:
-            print(f"[ERROR: Failed to add Spack spec '{self.pkg_name_with_spec}']")
-            sys.exit(-1)
 
         # For dev-build, call develop
         if self.build_mode == "dev-build":
